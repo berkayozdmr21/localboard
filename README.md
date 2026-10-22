@@ -74,15 +74,16 @@ The native app uses its per-user Tauri app-data directory. The companion uses `.
 - Git changes display at most 200 entries. Technology markers do not prove a project is healthy or dependencies are installed.
 - Services run only when explicitly started; adding/scanning a project executes nothing. Commands run with the current user's permissions and environment. Only configure code you trust.
 - A running status means the process exists, not that its HTTP service is ready. Port checks use TCP on `127.0.0.1`; there is a normal race between checking and the application's own bind.
-- On Windows, stopping a live owned process uses `taskkill /T` to stop its process tree. Normal app exit stops owned services. Forced app termination or a parent that exits before its detached children can leave descendants; this is not a Windows service manager.
+- Windows services belong to owned Job Objects with kill-on-close. Stopping a service terminates its group; normal exit and OS handle cleanup also close the group. If Windows refuses group assignment, a live process is killed and the launch fails. This is a development supervisor, not a persistent Windows service manager.
 - Logs retain the latest 600 chunks per service, capped at 4 KiB each. Restarting a service begins a fresh log buffer.
 - The companion binds only to loopback and checks Host, Origin and the client header. It is for a trusted desktop, not public hosting. No telemetry or remote font loading.
 
 ## Feature PRs
 
 1. [Project library and Git insights](https://github.com/berkayozdmr21/localboard/pull/1)
-2. Process control center and named workspaces.
+2. [Process control center and named workspaces](https://github.com/berkayozdmr21/localboard/pull/2)
 
 ## Contact
 
 [Berkay Özdemir on LinkedIn](https://www.linkedin.com/in/berkay-%C3%B6zdemir-7332b2248/) · [Email](mailto:berkay.oz3321@gmail.com)
+
