@@ -1,0 +1,15 @@
+[package]
+name = "localboard"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "A quiet home for development projects"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+localboard-core = { path = "../crates/localboard-core" }
+serde_json = "1"
