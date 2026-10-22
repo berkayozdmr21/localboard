@@ -1,4 +1,5 @@
 //! Shared native core. It never uploads paths, source code or logs.
+pub mod processes;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -277,6 +278,7 @@ pub fn git_info(path: &Path) -> GitInfo {
 }
 
 pub struct Board {
+    pub center: processes::Center,
     pub data_path: PathBuf,
     pub library: Library,
 }
@@ -290,7 +292,12 @@ impl Board {
         } else {
             Library::default()
         };
-        Ok(Self { data_path, library })
+        let center = processes::Center::open(data_path.join("services.json"))?;
+        Ok(Self {
+            data_path,
+            library,
+            center,
+        })
     }
     pub fn save(&self) -> Result<()> {
         let raw = serde_json::to_vec_pretty(&self.library).map_err(|e| e.to_string())?;
@@ -380,6 +387,23 @@ impl Board {
             }
             "git_info" => {
                 Ok(serde_json::to_value(git_info(Path::new(&self.project(id)?.path))).unwrap())
+            }
+            "services" => Ok(self.center.snapshot()),
+            "service_add" => self.center.add(&args, &self.library.projects),
+            "service_start" => self.center.start(id, &self.library.projects),
+            "service_stop" => self.center.stop(id),
+            "service_delete" => self.center.delete(id),
+            "service_logs" => self.center.logs(id),
+            "workspace_add" => self.center.workspace_add(&args),
+            "workspace_start" => self.center.workspace_start(id, &self.library.projects),
+            "workspace_stop" => self.center.workspace_stop(id),
+            "workspace_delete" => self.center.workspace_delete(id),
+            "port_check" => {
+                let port = args["port"]
+                    .as_u64()
+                    .filter(|p| *p > 0 && *p <= 65535)
+                    .ok_or("Geçerli port gerekli.")? as u16;
+                Ok(json!({"port":port,"busy":processes::port_busy(port)}))
             }
             _ => Err("Bilinmeyen işlem.".into()),
         }
