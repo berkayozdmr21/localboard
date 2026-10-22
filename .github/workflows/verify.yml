@@ -1,0 +1,29 @@
+name: Verify and build Windows
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-fund --no-audit
+      - run: npm test
+      - run: npm run build
+      - run: cargo test -p localboard-core --locked
+      - run: cargo build --release -p localboard-preview --locked
+      - run: npm run desktop:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: localboard-windows
+          path: |
+            target/release/localboard.exe
+            target/release/localboard-preview.exe
+            dist/
