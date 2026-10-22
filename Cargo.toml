@@ -1,0 +1,4 @@
+[workspace]
+members = ["crates/localboard-core", "crates/localboard-preview", "src-tauri"]
+default-members = ["crates/localboard-core", "crates/localboard-preview"]
+resolver = "2"

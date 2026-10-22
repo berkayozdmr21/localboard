@@ -1,0 +1,8 @@
+node_modules/
+target/
+.toolchain/
+.tmp/
+.localboard/
+*.log
+.env
+src-tauri/gen/
