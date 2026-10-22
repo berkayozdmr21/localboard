@@ -77,7 +77,7 @@ fn main() {
                 } else {
                     url.trim_start_matches('/')
                 };
-                if relative.contains("..") || relative.contains('\\') {
+                if relative.contains("..") || relative.contains('\\') || relative.contains(':') {
                     let _ = req.respond(Response::from_string("Not found").with_status_code(404));
                     return;
                 }

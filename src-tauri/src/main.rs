@@ -34,6 +34,18 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![dispatch, choose_root])
-        .run(tauri::generate_context!())
-        .expect("LocalBoard failed to start");
+        .build(tauri::generate_context!())
+        .expect("LocalBoard failed to start")
+        .run(|app, event| {
+            if matches!(
+                event,
+                tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit
+            ) {
+                if let Some(state) = app.try_state::<Mutex<Board>>() {
+                    if let Ok(mut board) = state.lock() {
+                        board.center.shutdown();
+                    };
+                }
+            }
+        });
 }
