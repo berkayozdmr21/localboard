@@ -25,6 +25,23 @@ const projects = [
   },
 ];
 describe("process controls", () => {
+  it("clears previous service command and port when reopening the form", async () => {
+    vi.mocked(dispatch).mockResolvedValue({ services: [], workspaces: [] });
+    render(<Services projects={projects} />);
+    fireEvent.click(screen.getByRole("button", { name: "Servis ekle" }));
+    fireEvent.change(screen.getByLabelText("Program"), {
+      target: { value: "python" },
+    });
+    fireEvent.change(screen.getByRole("spinbutton"), {
+      target: { value: "8000" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Kapat" }));
+    fireEvent.click(screen.getByRole("button", { name: "Servis ekle" }));
+    expect((screen.getByLabelText("Program") as HTMLInputElement).value).toBe(
+      "npm",
+    );
+    expect((screen.getByRole("spinbutton") as HTMLInputElement).value).toBe("");
+  });
   it("accepts structured args and rejects ambiguous input", () => {
     expect(parseArguments('["-m","uvicorn","main:app"]')).toEqual([
       "-m",

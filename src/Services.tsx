@@ -117,6 +117,10 @@ export default function Services({ projects }: { projects: Project[] }) {
   function open(kind: "service" | "workspace") {
     setModal(kind);
     setName("");
+    setExecutable("npm");
+    setArgs('["run", "dev"]');
+    setPort("");
+    setError("");
     setPortResult("");
     setChecked([]);
     if (!projectId) setProjectId(projects[0]?.id || "");
