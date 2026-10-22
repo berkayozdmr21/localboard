@@ -28,6 +28,25 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 describe("project library", () => {
+  it("ignores surrounding whitespace in pasted searches", () => {
+    expect(filterProjects([project], "  React\n", false)).toHaveLength(1);
+    expect(filterProjects([project], "   ", false)).toHaveLength(1);
+    expect(filterProjects([project], "   ", true)).toHaveLength(0);
+  });
+  it("matches Windows paths using either slash separator", () => {
+    const windows = { ...project, path: "C:\\Projects\\orbit" };
+    expect(filterProjects([windows], "C:/Projects/orbit", false)).toHaveLength(
+      1,
+    );
+    expect(
+      filterProjects([project], "C:\\Projects\\orbit", false),
+    ).toHaveLength(1);
+  });
+  it("matches canonically equivalent Unicode project names", () => {
+    const cafe = { ...project, name: "Café İstanbul" };
+    expect(filterProjects([cafe], "Cafe\u0301", false)).toHaveLength(1);
+    expect(filterProjects([cafe], "İSTANBUL", false)).toHaveLength(1);
+  });
   it("filters real project names, paths, technology and favorites", () => {
     expect(filterProjects([project], "react", false)).toHaveLength(1);
     expect(filterProjects([project], "Projects/orbit", false)).toHaveLength(1);
