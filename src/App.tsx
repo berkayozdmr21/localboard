@@ -29,14 +29,13 @@ export function filterProjects(
   query: string,
   favorites: boolean,
 ) {
-  const q = query.toLocaleLowerCase("tr");
+  const normalize = (value: string) =>
+    value.normalize("NFC").replace(/\\/g, "/").toLocaleLowerCase("tr");
+  const q = normalize(query.trim());
   return projects.filter(
     (p) =>
       (!favorites || p.favorite) &&
-      [p.name, p.path, ...p.stack]
-        .join(" ")
-        .toLocaleLowerCase("tr")
-        .includes(q),
+      normalize([p.name, p.path, ...p.stack].join(" ")).includes(q),
   );
 }
 const stackColor: Record<string, string> = {
