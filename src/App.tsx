@@ -21,6 +21,8 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { dispatch, chooseRoot, native } from "./bridge";
+import Services from "./Services";
+import "./services.css";
 import type { Snapshot, Project, GitInfo } from "./types";
 export function filterProjects(
   projects: Project[],
@@ -179,6 +181,16 @@ export default function App() {
         <nav aria-label="Ana gezinme">
           <span className="nav-label">ÇALIŞMA MASASI</span>
           <button
+            className={view === "services" ? "active" : ""}
+            onClick={() => {
+              setView("services");
+              setSelected(null);
+            }}
+          >
+            <Command size={17} />
+            Kontrol merkezi
+          </button>
+          <button
             className={view === "library" ? "active" : ""}
             onClick={() => setView("library")}
           >
@@ -223,9 +235,11 @@ export default function App() {
             Çalışma alanım <ChevronRight size={13} />{" "}
             {view === "roots"
               ? "Kaynak klasörler"
-              : view === "favorites"
-                ? "Favoriler"
-                : "Proje kütüphanesi"}
+              : view === "services"
+                ? "Kontrol merkezi"
+                : view === "favorites"
+                  ? "Favoriler"
+                  : "Proje kütüphanesi"}
           </span>
           <div>
             <span className="local-pill">
@@ -242,46 +256,50 @@ export default function App() {
           </div>
         </header>
         <main>
-          <section className="hero">
-            <div>
-              <div className="eyebrow">WORKSPACE / 01</div>
-              <h1>Çalışma masası</h1>
-              <p>Birlikte çalıştığın tüm projeler, tek bir masada.</p>
-            </div>
-            <button
-              className="primary"
-              onClick={() => void addRoot()}
-              disabled={busy}
-            >
-              <FolderPlus size={17} /> Klasör ekle <span>↗</span>
-            </button>
-          </section>
-          <div className="summary-grid">
-            <div>
-              <span>PROJE KÜTÜPHANESİ</span>
-              <strong>
-                {snapshot.projects.length.toString().padStart(2, "0")}
-                <LayoutGrid size={20} />
-              </strong>
-              <small>Keşfedilen yerel proje</small>
-            </div>
-            <div>
-              <span>KAYNAK KLASÖRLER</span>
-              <strong>
-                {snapshot.roots.length.toString().padStart(2, "0")}
-                <Folder size={20} />
-              </strong>
-              <small>Yalnızca seçtiğin klasörler</small>
-            </div>
-            <div className="summary-accent">
-              <span>DEPOLAMA</span>
-              <strong>
-                Bu cihaz
-                <HardDrive size={20} />
-              </strong>
-              <small>Hesap yok. Bulut yok. Kaynak kodun sende.</small>
-            </div>
-          </div>
+          {view !== "services" && (
+            <>
+              <section className="hero">
+                <div>
+                  <div className="eyebrow">WORKSPACE / 01</div>
+                  <h1>Çalışma masası</h1>
+                  <p>Birlikte çalıştığın tüm projeler, tek bir masada.</p>
+                </div>
+                <button
+                  className="primary"
+                  onClick={() => void addRoot()}
+                  disabled={busy}
+                >
+                  <FolderPlus size={17} /> Klasör ekle <span>↗</span>
+                </button>
+              </section>
+              <div className="summary-grid">
+                <div>
+                  <span>PROJE KÜTÜPHANESİ</span>
+                  <strong>
+                    {snapshot.projects.length.toString().padStart(2, "0")}
+                    <LayoutGrid size={20} />
+                  </strong>
+                  <small>Keşfedilen yerel proje</small>
+                </div>
+                <div>
+                  <span>KAYNAK KLASÖRLER</span>
+                  <strong>
+                    {snapshot.roots.length.toString().padStart(2, "0")}
+                    <Folder size={20} />
+                  </strong>
+                  <small>Yalnızca seçtiğin klasörler</small>
+                </div>
+                <div className="summary-accent">
+                  <span>DEPOLAMA</span>
+                  <strong>
+                    Bu cihaz
+                    <HardDrive size={20} />
+                  </strong>
+                  <small>Hesap yok. Bulut yok. Kaynak kodun sende.</small>
+                </div>
+              </div>
+            </>
+          )}
           {error && (
             <div role="alert" className="error-banner">
               <AlertCircle size={18} />
@@ -299,7 +317,9 @@ export default function App() {
               </div>
             </div>
           )}
-          {view === "roots" ? (
+          {view === "services" ? (
+            <Services projects={snapshot.projects} />
+          ) : view === "roots" ? (
             <section className="roots-view">
               <div className="section-heading">
                 <h2>Kaynak klasörler</h2>
@@ -378,11 +398,7 @@ export default function App() {
                 </label>
               </div>
               <div className="section-heading">
-                <h2>
-                  {view === "favorites"
-                    ? "Favori projeler"
-                    : "Projeler"}
-                </h2>
+                <h2>{view === "favorites" ? "Favori projeler" : "Projeler"}</h2>
                 <span>{projects.length} proje</span>
               </div>
               {loading ? (
@@ -493,9 +509,7 @@ export default function App() {
           <footer>
             <span>
               <span className="tiny-dot" />{" "}
-              {busy
-                ? "Kütüphane güncelleniyor…"
-                : "Yerel kütüphane hazır"}
+              {busy ? "Kütüphane güncelleniyor…" : "Yerel kütüphane hazır"}
             </span>
             <span>
               LOCALBOARD <b>v0.1</b>
@@ -604,7 +618,13 @@ export default function App() {
       )}
       {dialog && (
         <div className="modal-backdrop">
-          <form className="modal" onSubmit={importPath}>
+          <form
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Kaynak klasör ekle"
+            onSubmit={importPath}
+          >
             <button
               type="button"
               className="modal-close icon-button"
@@ -668,7 +688,7 @@ export default function App() {
             <p className="field-note">
               Tauri · React · TypeScript · Rust
               <br />
-              v0.1 · Proje kütüphanesi
+              v0.1 · Proje kütüphanesi ve servis yönetimi
             </p>
           </section>
         </div>
