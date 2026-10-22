@@ -50,6 +50,8 @@ struct Log {
 }
 struct Running {
     child: Child,
+    #[cfg(windows)]
+    job: crate::windows_job::Job,
     log: Arc<Mutex<Log>>,
 }
 pub struct Center {
@@ -254,10 +256,20 @@ impl Center {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         hidden(&mut command);
+        #[cfg(windows)]
+        let job = crate::windows_job::Job::new()?;
         let mut child = command
             .spawn()
             .map_err(|e| format!("Program başlatılamadı: {e}"))?;
         let pid = child.id();
+        #[cfg(windows)]
+        if let Err(error) = job.assign(&child) {
+            if child.try_wait().map_err(|e| e.to_string())?.is_none() {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(error);
+            }
+        }
         let log = Arc::new(Mutex::new(Log::default()));
         if let Some(out) = child.stdout.take() {
             log_reader(out, "stdout", log.clone());
@@ -266,24 +278,22 @@ impl Center {
             log_reader(err, "stderr", log.clone());
         }
         self.finished.remove(id);
-        self.running.insert(id.into(), Running { child, log });
+        self.running.insert(
+            id.into(),
+            Running {
+                child,
+                log,
+                #[cfg(windows)]
+                job,
+            },
+        );
         Ok(json!({"pid":pid}))
     }
     pub fn stop(&mut self, id: &str) -> Result<Value> {
         self.reap();
         if let Some(r) = self.running.get_mut(id) {
             #[cfg(windows)]
-            {
-                let mut cmd = Command::new("taskkill.exe");
-                cmd.args(["/PID", &r.child.id().to_string(), "/T", "/F"]);
-                hidden(&mut cmd);
-                let output = cmd.output().map_err(|e| e.to_string())?;
-                if !output.status.success()
-                    && r.child.try_wait().map_err(|e| e.to_string())?.is_none()
-                {
-                    return Err("Servis süreç ağacı durdurulamadı.".into());
-                }
-            }
+            r.job.stop()?;
             #[cfg(not(windows))]
             r.child.kill().map_err(|e| e.to_string())?;
             let _ = r.child.wait();

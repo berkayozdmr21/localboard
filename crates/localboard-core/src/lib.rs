@@ -1,5 +1,7 @@
 //! Shared native core. It never uploads paths, source code or logs.
 pub mod processes;
+#[cfg(windows)]
+mod windows_job;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
