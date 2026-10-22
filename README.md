@@ -6,6 +6,8 @@ LocalBoard is a Windows desktop workspace for discovering development projects, 
 
 No account, API key or external backend is required. Source files stay in their original locations.
 
+![LocalBoard process control center showing a real npm build](https://github.com/user-attachments/assets/4b95084d-aa3a-47ec-8291-f1af0eb302af)
+
 ## Features
 
 - **Project discovery:** Node.js, React, Next.js, Vue, Vite, TypeScript, Tauri, Rust, Python, Flutter, Go, PHP, .NET and Unity markers.
@@ -86,4 +88,5 @@ The native app uses its per-user Tauri app-data directory. The companion uses `.
 ## Contact
 
 [Berkay Özdemir on LinkedIn](https://www.linkedin.com/in/berkay-%C3%B6zdemir-7332b2248/) · [Email](mailto:berkay.oz3321@gmail.com)
+
 
