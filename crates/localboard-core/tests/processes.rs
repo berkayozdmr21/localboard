@@ -6,6 +6,34 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(windows)]
+#[test]
+fn stopping_job_releases_descendant_server_port() {
+    let (_s, _d, mut b, p) = fixture();
+    let probe = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = probe.local_addr().unwrap().port();
+    drop(probe);
+    let child =
+        format!("require('node:http').createServer((q,r)=>r.end('ok')).listen({port},'127.0.0.1')");
+    let parent=format!("require('node:child_process').spawn(process.execPath,['-e',{}],{{stdio:'ignore'}});setInterval(()=>{{}},1000)",serde_json::to_string(&child).unwrap());
+    let id = add(&mut b, &p, "tree", "node", json!(["-e", parent]), None);
+    b.dispatch("service_start", json!({"id":id})).unwrap();
+    let deadline = Instant::now() + Duration::from_secs(6);
+    while !localboard_core::processes::port_busy(port) {
+        assert!(Instant::now() < deadline);
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    b.dispatch("service_stop", json!({"id":id})).unwrap();
+    let deadline = Instant::now() + Duration::from_secs(3);
+    while localboard_core::processes::port_busy(port) {
+        assert!(
+            Instant::now() < deadline,
+            "Descendant outlived its service job"
+        );
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
 fn fixture() -> (tempfile::TempDir, tempfile::TempDir, Board, String) {
     let source = tempfile::tempdir().unwrap();
     let data = tempfile::tempdir().unwrap();
